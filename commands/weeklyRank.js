@@ -1,30 +1,33 @@
-const { db } = require('../db/database');
+const { query } = require('../db/database');
 
 async function getWeeklyRanking() {
-  return new Promise((resolve, reject) => {
-    const query = `
+  try {
+    const result = await query(
+      `
       SELECT username, SUM(duration) AS total_seconds
       FROM voice_logs
-      WHERE timestamp >= datetime('now', '-7 days')
-      GROUP BY user_id
+      WHERE timestamp >= NOW() - INTERVAL '7 days'
+      GROUP BY user_id, username
       ORDER BY total_seconds DESC
       LIMIT 10
-    `;
+      `
+    );
 
-    db.all(query, [], (err, rows) => {
-      if (err) return reject(err);
+    const rows = result.rows;
 
-      if (rows.length === 0) {
-        return resolve('🥲 지난 일주일간 기록이 없어요!');
-      }
+    if (rows.length === 0) {
+      return '🥲 지난 일주일간 기록이 없어요!';
+    }
 
-      const result = rows
-        .map((row, index) => `${index + 1}위. ${row.username} — ${Math.floor(row.total_seconds / 60)}분`)
-        .join('\n');
+    const formatted = rows
+      .map((row, index) => `${index + 1}위. ${row.username} — ${Math.floor(row.total_seconds / 60)}분`)
+      .join('\n');
 
-      resolve(`📅 **주간 공부 랭킹 (최근 7일)**\n\n${result}`);
-    });
-  });
+    return `📅 **주간 공부 랭킹 (최근 7일)**\n\n${formatted}`;
+  } catch (err) {
+    console.error('❌ 주간 랭킹 조회 실패:', err.message);
+    return '⚠️ 주간 랭킹을 불러오는 중 오류가 발생했어요.';
+  }
 }
 
 module.exports = {
