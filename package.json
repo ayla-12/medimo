@@ -3,5 +3,8 @@
     "discord.js": "^14.19.3",
     "dotenv": "^16.5.0",
     "sqlite3": "^5.1.7"
+  },
+  "scripts": {
+    "start": "node index.js"
   }
 }
