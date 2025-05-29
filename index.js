@@ -3,7 +3,13 @@ const fs = require("fs");
 const path = require("path");
 const { Client, GatewayIntentBits } = require("discord.js");
 
-// 1️⃣ 먼저 클라이언트 생성
+// ✅ 환경변수 체크
+if (!process.env.DISCORD_TOKEN) {
+  console.error("❌ DISCORD_TOKEN이 .env에 없습니다!");
+  process.exit(1);
+}
+
+// ✅ 클라이언트 생성
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -13,36 +19,55 @@ const client = new Client({
   ],
 });
 
-// 2️⃣ 이벤트 로더
-const voiceTracker = require("./events/voiceTrackers");
-voiceTracker(client);
-
-// 3️⃣ 명령어 로더
-const commands = new Map();
-const commandFiles = fs
-  .readdirSync(path.join(__dirname, "commands"))
-  .filter((file) => file.endsWith(".js"));
-
-for (const file of commandFiles) {
-  const command = require(`./commands/${file}`);
-  if (command.name && command.execute) {
-    commands.set(command.name, command);
-  }
+// ✅ 음성 트래킹 이벤트 로딩
+try {
+  const voiceTracker = require("./events/voiceTrackers");
+  voiceTracker(client);
+} catch (err) {
+  console.error("❌ voiceTracker 로드 중 오류:", err.message);
 }
 
-// 4️⃣ 명령어 실행 핸들러
+// ✅ 명령어 로딩
+const commands = new Map();
+try {
+  const commandFiles = fs
+    .readdirSync(path.join(__dirname, "commands"))
+    .filter((file) => file.endsWith(".js"));
+
+  for (const file of commandFiles) {
+    const command = require(`./commands/${file}`);
+    if (command.name && command.execute) {
+      commands.set(command.name, command);
+    }
+  }
+} catch (err) {
+  console.error("❌ 명령어 로딩 중 오류:", err.message);
+}
+
+// ✅ 메시지 핸들링
 client.on("messageCreate", async (message) => {
-  if (!message.content.startsWith("!")) return;
+  if (message.author.bot || !message.content.startsWith("!")) return;
 
   const command = commands.get(message.content.trim());
   if (command) {
-    await command.execute(message);
+    try {
+      await command.execute(message);
+    } catch (err) {
+      console.error(`❌ 명령어 실행 오류 (${command.name}):`, err.message);
+    }
   }
 });
 
-// 5️⃣ 로그인 및 ready 로그
+// ✅ 로그인 및 준비 로그
 client.once("ready", () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-client.login(process.env.DISCORD_TOKEN);
+// ✅ 로그인 시도
+(async () => {
+  try {
+    await client.login(process.env.DISCORD_TOKEN);
+  } catch (err) {
+    console.error("❌ Discord 로그인 실패:", err.message);
+  }
+})();
