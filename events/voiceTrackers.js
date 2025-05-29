@@ -20,13 +20,20 @@ module.exports = (client) => {
 
     // ✅ 입장했을 때 시간 저장
     if (joinedTarget) {
+      console.log(`입장 감지됨: ${member.user.tag}`);
       joinTimestamps.set(userId, Date.now());
     }
 
     // ✅ 퇴장했을 때 시간 계산
     if (leftTarget && joinTimestamps.has(userId)) {
+      // 🐛 디버깅 로그
+      console.log(`퇴장 감지됨: ${member.user.tag}`);
+
       const joinedAt = joinTimestamps.get(userId);
-      const duration = Math.floor((Date.now() - joinedAt) / 1000); // 초 단위
+      const duration = Math.floor((Date.now() - joinedAt) / 1000);
+
+      // 🐛 디버깅 로그
+      console.log(`총 체류 시간: ${duration}초`);
 
       joinTimestamps.delete(userId); // 추적 종료
 

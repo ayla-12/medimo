@@ -14,7 +14,7 @@ const client = new Client({
 });
 
 // 2️⃣ 이벤트 로더
-const voiceTracker = require("./events/voiceTracker");
+const voiceTracker = require("./events/voiceTrackers");
 voiceTracker(client);
 
 // 3️⃣ 명령어 로더
