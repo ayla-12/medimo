@@ -71,3 +71,5 @@ client.once("ready", () => {
     console.error("❌ Discord 로그인 실패:", err.message);
   }
 })();
+
+process.stdin.resume(); // 프로세스를 유지시킴
