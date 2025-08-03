@@ -50,12 +50,15 @@ try {
 client.on("messageCreate", async (message) => {
   if (message.author.bot || !message.content.startsWith("!")) return;
 
-  const command = commands.get(message.content.trim());
+  const args = message.content.trim().split(/ +/);
+  const commandName = args[0]; // '!잔소리'
+  const command = commands.get(commandName);
+
   if (command) {
     try {
       await command.execute(message);
     } catch (err) {
-      console.error(`❌ 명령어 실행 오류 (${command.name}):`, err.message);
+      console.error(`❌ 명령어 실행 오류 (${commandName}):`, err.message);
     }
   }
 });
